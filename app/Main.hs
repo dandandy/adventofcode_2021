@@ -18,11 +18,11 @@ readInputFile = do
 
 readInput1 = do
     x <- readInputFile
-    print $ countIncreased <$> measure <$> x
+    print $ countIncreased . measure <$> x
 
 readInput2 = do
     x <- readInputFile
-    print $ countIncreased <$> measure <$> rollingWindow <$> x
+    print $ countIncreased . measure . rollingWindow <$> x
 
 toList :: String -> Maybe [Int]
 toList s = mapM readMaybe ( words s)
