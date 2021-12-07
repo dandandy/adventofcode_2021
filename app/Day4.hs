@@ -22,32 +22,31 @@ type Board = [[Square]]
 
 data Square = Square Bool Int deriving (Show)
 
-data Game = Game [Int] Board deriving (Show)
+data Game = Game [Int] [Board] deriving (Show)
 
 comma :: Monad m => ParsecT String u m Char
 comma = char ','
 
 number :: Monad m => ParsecT String u m Int
 number = read <$> many1 digit
--- number = (\a -> trace (show a) read a) <$> many digit
 
 draws :: Monad m => ParsecT String u m [Int]
-draws = try $ number `sepBy` comma -- `endBy` endOfLine
-
--- paddedNumber :: Monad m => ParsecT String u m Int
--- paddedNumber = space *> number <* skipMany space
+draws = try $ number `sepBy` comma
 
 boardRow :: Monad m => ParsecT String u m [Square]
-boardRow = map (Square False) <$> many (many (char ' ') *> number <* many (char ' ')) <* char '\n'
+boardRow = map (Square False) <$> ( many (char ' ') *> (number `sepBy` many1 (char ' ')))
 -- boardRow = map (Square False) <$> (( number `sepEndBy` skipMany (oneOf " ")) <* newline )
 
 game :: Monad m => ParsecT String u m Game
-game = Game <$> (draws <* newline) <*> board
+game = Game <$> (draws <* newline)  <*> (newline *> boards)
+
+boards :: Monad m =>  ParsecT String u m [Board]
+boards = board `sepBy` newline
 
 -- board :: Monad m => ParsecT String u m Board
-board :: Monad m =>  ParsecT String u m [[Square]]
+board :: Monad m =>  ParsecT String u m Board
 -- board = many (boardRow <* char '\n')
-board = spaces *> many boardRow <* spaces
+board = boardRow `sepBy` newline
 
 example :: IO String
 example = pure "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1\n\
