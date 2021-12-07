@@ -10,13 +10,14 @@ import Data.Char (isSpace)
 import Data.List
 import Control.Arrow
 import Data.Foldable (foldrM)
+import Text.Parsec.String
 
 -- test :: Stream s Data.Functor.Identity.Identity t => Parsec s () a -> s -> Either ParseError a
 -- test p = parse p ""
 
 day4part1 :: IO ()
-day4part1 = do x <- example
-               print $ (\(a, b) -> getAllUnmarkedSum a * b) <$> play <$> parse game "input" x
+day4part1 = do  x <- parseFromFile game "input4.txt"
+                putStrLn ("Day 4 Part 1: "++ show ((\(a, b) -> getAllUnmarkedSum a * b) . play <$> x))
 
 day4part2 :: IO ()
 day4part2 = pure ()
