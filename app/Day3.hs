@@ -1,7 +1,7 @@
 module Day3 (day3part1, day3part2) where
 
 import Data.List
-import Debug.Trace
+
 
 getFile = readFile "input3.txt"
 
@@ -13,14 +13,27 @@ day3part1 = do
   putStrLn $ (("Day 3 Part 1: " ++) . show . multiplyTuple . applyToTuple binaryToInt . applyFunction notBinary . map mostCommon . transpose . parseInput) x
 
 day3part2 = do
-  x <- example
-  putStrLn $ (("Day 3 Part 2: " ++) . show . oxygenGeneratorRating . parseInput) x
+  x <- getFile
+  putStrLn $ (("Day 3 Part 2: " ++) . show . multiplyTuple . applyTwoFunctions oxygenGeneratorRating co2ScrubberRating . parseInput) x
 
 parseInput :: String -> [[Int]]
 parseInput i = map (map readChar) $ words i
 
+applyTwoFunctions :: (a -> b) -> (a -> c) -> a -> (b, c)
+applyTwoFunctions f1 f2 v = (f1 v, f2 v)
+
 readChar :: Char -> Int
 readChar = read . pure
+
+co2ScrubberRating :: [[Int]] -> Int
+co2ScrubberRating ls = binaryToInt $ co2ScrubberRatingCriteria 0 ls
+
+co2ScrubberRatingCriteria :: Int -> [[Int]] -> [Int]
+co2ScrubberRatingCriteria _ [v] = v
+co2ScrubberRatingCriteria n vs | length vs > 1 = co2ScrubberRatingCriteria (n + 1) $ filter (\xs -> (xs !! n) == leastCommon') vs
+  where
+    leastCommon' = if common n vs == 0 then 1 else 0
+co2ScrubberRatingCriteria _ _ = []
 
 oxygenGeneratorRating :: [[Int]] -> Int
 oxygenGeneratorRating ls = binaryToInt $ oxygenBitCriteria 0 ls
@@ -29,13 +42,13 @@ oxygenBitCriteria :: Int -> [[Int]] -> [Int]
 oxygenBitCriteria _ [v] = v
 oxygenBitCriteria n vs
 --   | null vs || n > length (head vs) - 1 = error $ show vs ++ " error!! " ++ show n
-  | length vs > 1 = trace (show n ++ " " ++ show vs) oxygenBitCriteria (n + 1) $ filter (\xs -> trace ("filter: " ++ show xs ++ " n: " ++ show n) ((xs !! n) == common')) vs
+  | length vs > 1 = oxygenBitCriteria (n + 1) $ filter (\xs -> (xs !! n) == common') vs
   where
     common' = common n vs
 oxygenBitCriteria _ _ = []
 
 common :: Int -> [[Int]] -> Int
-common n vs  = trace ("common: n: " ++ show n ++ ", vs: "++ show vs) $ mostCommon $ map (!! n) vs
+common n vs  = mostCommon $ map (!! n) vs
 
 mostCommon :: [Int] -> Int
 mostCommon l = case partition (== 1) l of
