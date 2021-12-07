@@ -1,4 +1,4 @@
-module Day3 where
+module Day3 (day3part1, day3part2) where
 import Data.List
 import Debug.Trace
 
@@ -6,12 +6,11 @@ getFile = readFile "input3.txt"
 
 example :: IO String
 example = do return "00100 11110 10110 10111 10101 01111 00111 11100 10000 11001 00010 01010"
-day3part1 = do x <- getFile
-           print $ (multiplyTuple . applyToTuple binaryToInt .  applyFunction notBinary . map mostCommon . transpose . parseInput) x
+day3part1 = do  x <- getFile
+                putStrLn $ (("Day 3 Part 1: "++) . show . multiplyTuple . applyToTuple binaryToInt .  applyFunction notBinary . map mostCommon . transpose . parseInput) x
 
-input2 = do x <- example
-            print $ map (flip common (parseInput x)) [0..4]
-            print $ (oxygenGeneratorRating . parseInput) x
+day3part2 = do  x <- example
+                putStrLn $ (("Day 3 Part 2: "++) . show .oxygenGeneratorRating . parseInput) x
 
 parseInput :: String -> [[Int]]
 parseInput i = map (map readChar) $ words i
