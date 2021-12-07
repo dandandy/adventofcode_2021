@@ -9,10 +9,11 @@ data Line = Line Point Point deriving (Show)
 
 day5part1 :: IO ()
 day5part1 = do  x <- parseFromFile inputlines "input5.txt"
-                print (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> x) --  
+                print (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> x)
 
 day5part2 :: IO ()
-day5part2 = pure ()
+day5part2 = do  x <- parseFromFile inputlines "input5.txt"
+                print (length . filter (>=2) . countCopies . concatMap (\x -> getLinePoints x ++ getDiagLinePoints x) <$> x)
 
 number :: Monad m => ParsecT String u m Int
 number = read <$> many1 digit
@@ -32,6 +33,14 @@ getLinePoints l     | isHoriz l = case l of
                                         | x1 > x2 -> Point x1 y1 : getLinePoints (Line (Point (x1 - 1) y1) (Point x2 y2))
     Line _ _ -> []
 getLinePoints l   = []
+
+getDiagLinePoints :: Line -> [Point]
+getDiagLinePoints l | isStraightOrHoriz l = []
+getDiagLinePoints (Line (Point x1 y1) (Point x2 y2)) | x1 < x2 && y1 < y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 + 1) (y1 + 1)) (Point x2 y2))
+                                                     | x1 < x2 && y1 > y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 + 1) (y1 - 1)) (Point x2 y2))
+                                                     | x1 > x2 && y1 > y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 - 1) (y1 - 1)) (Point x2 y2))
+                                                     | x1 > x2 && y1 < y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 - 1) (y1 + 1)) (Point x2 y2))
+                                                     | otherwise = [Point x1 y1]
 
 inputline :: Monad m => ParsecT String u m Line
 inputline = Line <$> coord <* char ' ' <*> (arrow *> char ' ' *> coord)
