@@ -41,7 +41,6 @@ oxygenGeneratorRating ls = binaryToInt $ oxygenBitCriteria 0 ls
 oxygenBitCriteria :: Int -> [[Int]] -> [Int]
 oxygenBitCriteria _ [v] = v
 oxygenBitCriteria n vs
---   | null vs || n > length (head vs) - 1 = error $ show vs ++ " error!! " ++ show n
   | length vs > 1 = oxygenBitCriteria (n + 1) $ filter (\xs -> (xs !! n) == common') vs
   where
     common' = common n vs
