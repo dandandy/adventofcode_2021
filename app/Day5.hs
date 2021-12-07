@@ -2,13 +2,14 @@ module Day5 (day5part1, day5part2) where
 import Text.Parsec hiding (Line)
 import Text.Parsec ()
 import Data.List
+import Text.Parsec.String (parseFromFile)
 
 data Point = Point Int Int deriving (Show, Eq)
 data Line = Line Point Point deriving (Show)
 
 day5part1 :: IO ()
-day5part1 = do  x <- example
-                print (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> parse inputlines "" x)
+day5part1 = do  x <- parseFromFile inputlines "input5.txt"
+                print (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> x) --  
 
 day5part2 :: IO ()
 day5part2 = pure ()
