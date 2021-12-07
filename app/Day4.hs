@@ -7,13 +7,16 @@ import Text.Parsec
 import Text.Read (readMaybe)
 import Debug.Trace
 import Data.Char (isSpace)
+import Data.List
+import Control.Arrow
+import Data.Foldable (foldrM)
 
 -- test :: Stream s Data.Functor.Identity.Identity t => Parsec s () a -> s -> Either ParseError a
 -- test p = parse p ""
 
 day4part1 :: IO ()
 day4part1 = do x <- example
-               print $  parse game "input" x
+               print $ (\(a, b) -> getAllUnmarkedSum a * b) <$> play <$> parse game "input" x
 
 day4part2 :: IO ()
 day4part2 = pure ()
@@ -35,7 +38,7 @@ draws = try $ number `sepBy` comma
 
 boardRow :: Monad m => ParsecT String u m [Square]
 boardRow = map (Square False) <$> ( many (char ' ') *> (number `sepBy` many1 (char ' ')))
--- boardRow = map (Square False) <$> (( number `sepEndBy` skipMany (oneOf " ")) <* newline )
+
 
 game :: Monad m => ParsecT String u m Game
 game = Game <$> (draws <* newline)  <*> (newline *> boards)
@@ -45,6 +48,32 @@ boards = board `sepBy` newline
 
 board :: Monad m =>  ParsecT String u m Board
 board = (\a b c d e -> [a, b, c, d, e]) <$> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline)
+
+move :: Int -> Board -> Board
+move n = map (map (\(Square b' i) -> if i == n then Square True i else Square b' i ))
+
+getAllUnmarkedSum :: Board -> Int
+getAllUnmarkedSum bs = sum $ map (\(Square _ i) -> i) (filter (\(Square b i) -> not b) (concat bs))
+
+play :: Game -> (Board, Int)
+play (Game (a:as) boards) = case applyMove a boards of
+    bs -> case getWinner bs of
+        Nothing -> play (Game as bs)
+        Just winner -> (winner, a)
+play (Game [] b) = ([], 0)
+
+
+getWinner :: [Board] -> Maybe Board
+getWinner = find isWin
+
+applyMove :: Int -> [Board] -> [Board]
+applyMove i = map (move i)
+
+isWin :: Board -> Bool
+isWin b = colWin || rowWin b
+    where   colWin = rowWin $ transpose b
+            rowWin c = any rowAllTrue c
+            rowAllTrue = all (\(Square b v) -> b)
 
 example :: IO String
 example = pure "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1\n\
