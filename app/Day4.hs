@@ -43,10 +43,8 @@ game = Game <$> (draws <* newline)  <*> (newline *> boards)
 boards :: Monad m =>  ParsecT String u m [Board]
 boards = board `sepBy` newline
 
--- board :: Monad m => ParsecT String u m Board
 board :: Monad m =>  ParsecT String u m Board
--- board = many (boardRow <* char '\n')
-board = boardRow `sepBy` newline
+board = (\a b c d e -> [a, b, c, d, e]) <$> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline) <*> (boardRow <* newline)
 
 example :: IO String
 example = pure "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1\n\
