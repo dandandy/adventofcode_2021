@@ -5,7 +5,7 @@ module Day4 (day4part1, day4part2) where
 import Text.Parsec
 
 import Text.Read (readMaybe)
-import Debug.Trace
+
 import Data.Char (isSpace)
 import Data.List
 import Control.Arrow
@@ -62,16 +62,16 @@ play (Game (a:as) boards) = case applyMove a boards of
 play (Game [] b) = ([], 0)
 
 playToLose :: Game -> (Board, Int)
-playToLose (Game (a:as) [board]) = trace ("\n\nn:" ++ show (a:as) ++ " board: " ++ show board) (case applyMove a [board] of
+playToLose (Game (a:as) [board]) = case applyMove a [board] of
     bs -> case getWinners bs of
         [] -> playToLose (Game as bs)
-        [winner] -> trace (show ("1",winner, a)) (winner, a)
-        winners -> ([], 1))
-playToLose (Game (a:as) boards) = trace ("\n\nn:" ++ show (a:as) ++ " board: " ++ show boards) (case applyMove a boards of
+        [winner] -> (winner, a)
+        winners -> ([], 1)
+playToLose (Game (a:as) boards) = case applyMove a boards of
     bs -> case getWinners bs of
         [] -> playToLose (Game as bs)
-        winners -> playToLose (Game as (bs \\ winners)))
-playToLose (Game i _) = trace (show i) ([], 0)
+        winners -> playToLose (Game as (bs \\ winners))
+playToLose (Game i _) = ([], 0)
 
 getWinner :: [Board] -> Maybe Board
 getWinner = find isWin
