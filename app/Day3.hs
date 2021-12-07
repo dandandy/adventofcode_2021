@@ -1,15 +1,12 @@
-module Main where
+module Day3 where
 import Data.List
 import Debug.Trace
-
-main :: IO ()
-main = input2
 
 getFile = readFile "input3.txt"
 
 example :: IO String
 example = do return "00100 11110 10110 10111 10101 01111 00111 11100 10000 11001 00010 01010"
-input = do x <- getFile
+day3part1 = do x <- getFile
            print $ (multiplyTuple . applyToTuple binaryToInt .  applyFunction notBinary . map mostCommon . transpose . parseInput) x
 
 input2 = do x <- example
