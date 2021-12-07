@@ -12,19 +12,17 @@ import Control.Arrow
 import Data.Foldable (foldrM)
 import Text.Parsec.String
 
--- test :: Stream s Data.Functor.Identity.Identity t => Parsec s () a -> s -> Either ParseError a
--- test p = parse p ""
-
 day4part1 :: IO ()
 day4part1 = do  x <- parseFromFile game "input4.txt"
                 putStrLn ("Day 4 Part 1: "++ show ((\(a, b) -> getAllUnmarkedSum a * b) . play <$> x))
 
 day4part2 :: IO ()
-day4part2 = pure ()
+day4part2 = do  x <- parseFromFile game "input4.txt"
+                putStrLn ("Day 4 Part 2: "++ show ((\(a, b) -> getAllUnmarkedSum a * b) . playToLose <$> x))
 
 type Board = [[Square]]
 
-data Square = Square Bool Int deriving (Show)
+data Square = Square Bool Int deriving (Show, Eq)
 
 data Game = Game [Int] [Board] deriving (Show)
 
@@ -63,9 +61,23 @@ play (Game (a:as) boards) = case applyMove a boards of
         Just winner -> (winner, a)
 play (Game [] b) = ([], 0)
 
+playToLose :: Game -> (Board, Int)
+playToLose (Game (a:as) [board]) = trace ("\n\nn:" ++ show (a:as) ++ " board: " ++ show board) (case applyMove a [board] of
+    bs -> case getWinners bs of
+        [] -> playToLose (Game as bs)
+        [winner] -> trace (show ("1",winner, a)) (winner, a)
+        winners -> ([], 1))
+playToLose (Game (a:as) boards) = trace ("\n\nn:" ++ show (a:as) ++ " board: " ++ show boards) (case applyMove a boards of
+    bs -> case getWinners bs of
+        [] -> playToLose (Game as bs)
+        winners -> playToLose (Game as (bs \\ winners)))
+playToLose (Game i _) = trace (show i) ([], 0)
 
 getWinner :: [Board] -> Maybe Board
 getWinner = find isWin
+
+getWinners :: [Board] -> [Board]
+getWinners = filter isWin
 
 applyMove :: Int -> [Board] -> [Board]
 applyMove i = map (move i)
