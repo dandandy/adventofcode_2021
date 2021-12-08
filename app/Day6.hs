@@ -3,7 +3,7 @@ module Day6 (day6part1, day6part2) where
 
 import Text.Parsec
 import Text.Read
-import Debug.Trace
+
 import Text.Parsec.String (parseFromFile)
 import qualified Data.Map as Map
 import Data.List

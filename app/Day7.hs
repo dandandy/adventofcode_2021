@@ -6,14 +6,12 @@ import Text.Parsec.String
 
 day7part1 :: IO ()
 day7part1 =  do x <- parseFromFile parseInput "input7.txt"
-    -- do case parse parseInput "" example of
                 case x of
                  Left pe -> error $ show pe
                  Right m_ns -> print $ show (minimum .  allPossibleMoveCosts <$> m_ns)
 
 day7part2 :: IO ()
 day7part2 =  do x <- parseFromFile parseInput "input7.txt"
-    -- do case parse parseInput "" example of
                 case x of
                  Left pe -> error $ show pe
                  Right m_ns -> print $ show (minimum .  allPossibleMoveCostsPart2 <$> m_ns)
