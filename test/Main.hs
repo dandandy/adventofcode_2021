@@ -5,6 +5,7 @@ import qualified Day5
 import Test.HUnit
 
 
+
 main = runTestTTAndExit $ test ["test1" ~: [Point 0 0, Point 1 1] ~=? Day5.getDiagLinePoints (Line (Point 0 0) (Point 1 1))]
 
 test1 :: Test
