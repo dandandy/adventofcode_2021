@@ -4,28 +4,69 @@ import Text.Parsec
 import Data.List
 import Data.Foldable (Foldable(toList))
 import Text.Parsec.String
+import qualified Data.Maybe
 
 data Display = Display [String] [String] deriving (Show)
 
+data SegDisplay = SD { a::Char, b::Char, c:: Char,d:: Char,e:: Char, f:: Char, g:: Char }
+
 day8p1 :: IO ()
-day8p1 = do 
+day8p1 = do
     x <- parseFromFile displays "input8.txt"
     case x of
     -- case parse displays "" example of
       Left pe -> error $ show pe
-      Right diss -> print $ length <$> (sequence $ filter (/=Nothing) $ concatMap (\(Display _ right) -> map create1 right) diss)
+      Right diss -> print $ length <$> (sequence $ filter (/=Nothing) $ concatMap (\(Display _ right) -> map create right) diss)
 
 day8p2 :: IO ()
 day8p2 = pure ()
 
 -- data Numbers = One | Seven | Four | Eight
 
-create1 :: String -> Maybe String
-create1 n | length n == 2 = Just n
-        | length n == 3 = Just n
-        | length n == 4 = Just n
-        | length n == 7 = Just n
-        | otherwise = Nothing
+isUnique :: String -> Bool
+isUnique n = length n `elem` [2,3,4,7]
+
+find1 xs = Data.Maybe.fromMaybe [] (find (\ s -> length s == 2) xs)
+
+find4 xs = Data.Maybe.fromMaybe [] (find (\ s -> length s == 4) xs)
+
+find7 :: Foldable t => t [a] -> [a]
+find7 xs = Data.Maybe.fromMaybe [] (find (\ s -> length s == 3) xs)
+
+find8 xs = Data.Maybe.fromMaybe [] (find (\ s -> length s == 7) xs)
+
+find3 :: [String] -> Maybe String
+find3 xs = find (\s -> seven == seven `intersect` s) $ filter (\s -> length s == 5) xs
+    where seven = find7 xs
+
+find5 :: [String] -> Maybe String
+find5 xs = find (\s -> threeSeven == threeSeven `intersect` s) $ filter (\s -> length s == 5) xs
+    where   threeSeven = nub (three ++ seven) \\ one
+            three = Data.Maybe.fromMaybe [] $ find3 xs
+            seven = find7 xs
+            one = Data.Maybe.fromMaybe [] (find (\ s -> length s == 2) xs)
+
+find2 :: [String] -> Maybe String
+find2 xs = find (\s -> s /= five && s /= three && length s == 5) xs
+    where   five = Data.Maybe.fromMaybe [] $ find5 xs
+            three = Data.Maybe.fromMaybe [] $ find3 xs
+
+find6 xs = find (\s -> five `intersect` s == five) $ filter (\s -> length s == 6) xs
+    where   five = nub $ Data.Maybe.fromMaybe [] (find5 xs) ++ g
+            one = find1 xs
+            g = two \\ three
+            two = Data.Maybe.fromMaybe [] $ find2 xs
+            three = Data.Maybe.fromMaybe [] $ find3 xs
+
+
+find9 :: [[Char]] -> Maybe [Char]
+find9 xs = find (\s -> length s == 6 && s /= six && five `intersect` s == five) xs
+    where   six = Data.Maybe.fromMaybe [] $ find6 xs
+            five = nub $ Data.Maybe.fromMaybe [] (find5 xs) 
+
+find0 xs = find (\s -> s /= nine && s /= six && length s == 6) xs
+    where   nine = nub $ Data.Maybe.fromMaybe [] (find9 xs) 
+            six = nub $ Data.Maybe.fromMaybe [] (find6 xs) 
 
 create :: String -> Maybe Int
 create n | length n == 2 = Just 1
