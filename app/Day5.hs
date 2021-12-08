@@ -35,6 +35,7 @@ getLinePoints l     | isHoriz l = case l of
 getLinePoints l   = []
 
 getDiagLinePoints :: Line -> [Point]
+getDiagLinePoints (Line (Point x1 y1) (Point x2 y2)) | x1 == x2 && y1 == y2 = [Point x1 y1]
 getDiagLinePoints l | isStraightOrHoriz l = []
 getDiagLinePoints (Line (Point x1 y1) (Point x2 y2)) | x1 < x2 && y1 < y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 + 1) (y1 + 1)) (Point x2 y2))
                                                      | x1 < x2 && y1 > y2 = Point x1 y1 : getDiagLinePoints (Line (Point (x1 + 1) (y1 - 1)) (Point x2 y2))
