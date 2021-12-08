@@ -9,11 +9,11 @@ data Line = Line Point Point deriving (Show)
 
 day5part1 :: IO ()
 day5part1 = do  x <- parseFromFile inputlines "input5.txt"
-                print (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> x)
+                putStrLn ("Day 5 Part 1: "++ show (length . filter (>=2) . countCopies . concatMap getLinePoints . filter isStraightOrHoriz <$> x))
 
 day5part2 :: IO ()
 day5part2 = do  x <- parseFromFile inputlines "input5.txt"
-                print (length . filter (>=2) . countCopies . concatMap (\x -> getLinePoints x ++ getDiagLinePoints x) <$> x)
+                putStrLn ("Day 5 Part 2: "++ show (length . filter (>=2) . countCopies . concatMap (\x -> getLinePoints x ++ getDiagLinePoints x) <$> x))
 
 number :: Monad m => ParsecT String u m Int
 number = read <$> many1 digit
