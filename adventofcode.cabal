@@ -21,6 +21,13 @@ maintainer:         dbarrett@seek.com.au
 -- category:
 extra-source-files: CHANGELOG.md
 
+library
+    exposed-modules:  Day2, Day1, Day3, Day4, Day5
+    build-depends:    base>=4.14.3.0, parsec
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+
 executable adventofcode
     main-is:          Main.hs
 
@@ -32,3 +39,14 @@ executable adventofcode
     build-depends:    base>=4.14.3.0, parsec
     hs-source-dirs:   app
     default-language: Haskell2010
+
+test-suite test-melody
+    type: exitcode-stdio-1.0
+    main-is: Main.hs
+    hs-source-dirs: test
+    build-depends:  base>=4.14.3.0, 
+                    parsec,                       
+                    test-framework,
+                    test-framework-hunit,
+                    HUnit,
+                    adventofcode

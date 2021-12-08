@@ -1,4 +1,4 @@
-module Day5 (day5part1, day5part2) where
+module Day5 (Line(Line), Point(Point), day5part1, day5part2, getDiagLinePoints) where
 import Text.Parsec hiding (Line)
 import Text.Parsec ()
 import Data.List
