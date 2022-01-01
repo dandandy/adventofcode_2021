@@ -23,8 +23,8 @@ main = sequence_ [
     -- day5part2,
     -- day6part1,
     -- day6part2,
-        day7part1 ,
-        day7part2,
-        day8p1,
+    -- day7part1 ,
+    -- day7part2,
+        -- day8p1,
         day8p2
     ]
