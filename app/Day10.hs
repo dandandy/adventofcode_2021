@@ -10,6 +10,8 @@ import Data.Either
 
 brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
+data Bracket = Curly | Parent | Square | Angle deriving (Show)
+
 day10part1 :: IO ()
 day10part1 = do
     x <- parseFromFile parseInput "input10.txt"
@@ -20,9 +22,10 @@ day10part1 = do
 day10part2 :: IO ()
 day10part2 = do
     x <- parseFromFile parseInput "input10.txt"
+    -- x <- pure $ parse parseInput "example2" example2
     case x of
         Left pe -> error $  "invalid input " <> show pe
-        Right ss -> mainPart2 ss
+        Right ss -> print $ medianScore $ map autocompleteScore $ findValidIncompleteLines ss
 
 parseInput :: Monad m => ParsecT String u m [[Char]]
 parseInput = bracketParser `sepBy` newline
@@ -31,20 +34,28 @@ bracketParser :: Monad m => ParsecT String u m [Char]
 bracketParser = some $ choice $ map char brackets
 
 mainPart1 :: [String] -> IO ()
-mainPart1 ss = print $ sum $ map toPoints $ lefts $ map (`run` []) ss
+mainPart1 ss = print $ sum $ map toPoints $ map charToBracket $ lefts $ map (`run` []) ss
 
 mainPart2 :: [String] -> IO ()
-mainPart2 = print . median . sort . map (foldr ((\a b -> b*5 + a) . toPoints) 0) . rights . map (`run` [])
+mainPart2 = print . medianScore . map autocompleteScore . findValidIncompleteLines
 
-run :: String -> [Char] -> Either Char [Char]
+medianScore :: [Int] -> Int 
+medianScore  = median . sort 
+
+findValidIncompleteLines :: [String] -> [[Bracket]]
+findValidIncompleteLines = rights . map (`run` [])
+
+autocompleteScore :: [Bracket] -> Int 
+autocompleteScore = foldr ((\a b -> b*5 + a) . toPointsPart2) 0 . reverse
+
+run :: String -> [Char] -> Either Char [Bracket]
 (s:ss) `run` stack = run ss =<< takeFromStringAndPutOnStack (s:ss) stack
-[] `run` stack = Right stack
+[] `run` stack = Right $ map charToBracket stack
 
 takeFromStringAndPutOnStack :: String -> [Char] -> Either Char [Char]
 takeFromStringAndPutOnStack (s:ss) [] = if s == '(' || s == '{' || s == '<' || s == '[' then Right [s] else Left s
 takeFromStringAndPutOnStack (s:ss) (st:sts) = if compareInputToStack s st then Right (if s == ')' || s == '}' || s == ']' || s == '>' then sts else s:st:sts ) else Left s
 takeFromStringAndPutOnStack [] a = Right a
-
 
 median :: [a] -> a
 median a = a !! midpoint
@@ -77,16 +88,28 @@ isValid '<' '>' = True
 isValid '{' '}' = True
 isValid _ _ = False
 
-toPoints :: Char -> Int
-toPoints ')' = 3
-toPoints ']' = 57
-toPoints '}' = 1197
-toPoints '>' = 25137
-toPoints '(' = 1
-toPoints '[' = 2
-toPoints '{' = 3
-toPoints '<' = 4
-toPoints _ = 0
+toPoints :: Bracket -> Int
+toPoints Parent = 3
+toPoints Square = 57
+toPoints Curly = 1197
+toPoints Angle = 25137
+
+toPointsPart2 :: Bracket -> Int
+toPointsPart2 Parent = 1
+toPointsPart2 Square = 2
+toPointsPart2 Curly = 3
+toPointsPart2 Angle = 4
+
+charToBracket :: Char -> Bracket
+charToBracket '<' = Angle
+charToBracket '>' = Angle
+charToBracket '{' = Curly
+charToBracket '}' = Curly
+charToBracket '[' = Square
+charToBracket ']' = Square
+charToBracket ')' = Parent
+charToBracket '(' = Parent
+charToBracket a = error $ "invalid char to bracket " <> show a
 
 -- example = "<{([([[(<>()){}]>(<<{{"
 example = "[({(<(())[]>[[{[]{<()<>>\n\
@@ -99,3 +122,6 @@ example = "[({(<(())[]>[[{[]{<()<>>\n\
 \[<(<(<(<{}))><([]([]()\n\
 \<{([([[(<>()){}]>(<<{{\n\
 \<{([{{}}[<[[[<>{}]]]>[]]"
+
+
+example2 = "<{([{{}}[<[[[<>{}]]]>[]]"
