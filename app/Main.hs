@@ -9,6 +9,7 @@ import Day6 (day6part1, day6part2)
 import Day7 (day7part1, day7part2)
 import Day8
 import Day9
+import Day10
 
 main :: IO ()
 main = sequence_ [
@@ -24,9 +25,12 @@ main = sequence_ [
     -- day5part2,
     -- day6part1,
     -- day6part2,
-        -- day7part1 ,
-        -- day7part2,
-        -- day8p1,
-        -- day8p2
-        day9part1 
+    -- day7part1 ,
+    -- day7part2,
+    -- day8p1,
+    -- day8p2
+    -- day9part1,
+    day9part2
+    -- day10part1,
+    -- day10part2
     ]

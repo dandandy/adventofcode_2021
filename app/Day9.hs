@@ -21,7 +21,7 @@ day9part2 = do x <- parseFromFile parseInput "input9.txt"
 -- day9part2 = do case M.fromLists <$> parse parseInput "" example of
                  Left pe -> error $ show pe
                  Right ma -> print $ product <$> take 3 <$> reverse <$> sort <$> map length <$> map nub <$> map (\(x,y,z) -> findBasin x y ma) <$> getLowPointsIndex ma
-
+                --  Right ma -> print ma
 
 manyDigit :: Monad m =>  ParsecT String u m [Int]
 manyDigit = many1 (read . pure <$> digit)
@@ -66,9 +66,12 @@ safeGetWithIndex a b m = case M.safeGet a b m of
   Just a' -> Just (a, b, a')
 
 findBasin :: (Ord a, Num a, Show a) => Int -> Int -> M.Matrix a -> [(Int, Int)]
-findBasin a b m =(a,b) : concatMap (\(x,y,z) -> findBasin x y m) (filter (\(x,y,z) -> z == elem + 1 && z /= 9) ns)
-    where   ns = Data.Maybe.fromMaybe [] $ sequence $ filter Data.Maybe.isJust $ neighboursIndex a b m
+findBasin a b m = (((a,b) :) . concatMap (\(x,y,z) -> findBasin x y m) . filter (\(x,y,z) -> z == elem + 1 && z /= 9)) ns
+    where   ns = getListNeighbours a b m
             elem = M.getElem  a b m
+
+getListNeighbours :: (Ord a, Num a, Show a) => Int -> Int -> M.Matrix a -> [(Int, Int, a)]
+getListNeighbours a b m = Data.Maybe.fromMaybe [] $ sequence $ filter Data.Maybe.isJust $ neighboursIndex a b m
 
 example :: [Char]
 example = "2199943210\n\
