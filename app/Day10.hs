@@ -5,16 +5,21 @@ import Text.Parsec.Char (char)
 import Control.Applicative (Alternative(some))
 import Data.List
 import Text.Parsec.String (parseFromFile)
+import Control.Monad
 
 brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
 day10part1 :: IO ()
 day10part1 = do
-    x <- parseFromFile parseInput "input10.txt"
+    -- x <- parseFromFile parseInput "input10.txt"
+    let x = parse parseInput "" example
+    print x
+    -- case x of
+    --   Left pe -> error $ show  pe
+    --   Right ss -> print $ length ss
     case x of
       Left pe -> error $  "invalid input " <> show pe
-    --   Right ss -> print $ map (`run` []) ss
-      Right ss -> mainer ss
+      Right ss -> main ss
 
 day10part2 :: IO ()
 day10part2 = pure ()
@@ -25,11 +30,8 @@ parseInput = bracketParser `sepBy` newline
 bracketParser :: Monad m => ParsecT String u m [Char]
 bracketParser = some $ choice $ map char brackets
 
-mainer :: [String] -> IO ()
-mainer ss = print $ sum $ map leftToPoint $ main ss
-
-main :: [String] -> [Either Char [Char]]
-main = map (`run` [])
+main :: [String] -> IO ()
+main ss = print $ sum $ map (leftToPoint . (`run` [])) ss
 
 run :: String -> [Char] -> Either Char [Char]
 (s:ss) `run` stack = run ss =<< takeFromStringAndPutOnStack (s:ss) stack
