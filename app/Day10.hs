@@ -1,54 +1,93 @@
 
 module Day10 (day10part1, day10part2) where
-import Text.Parsec (ParsecT, (<|>), space, parse, endOfLine, spaces, string, eof)
+import Text.Parsec (ParsecT, (<|>), space, parse, endOfLine, spaces, string, eof, choice, many1, sepBy, newline)
 import Text.Parsec.Char (char)
+import Control.Applicative (Alternative(some))
+import Data.List
+import Text.Parsec.String (parseFromFile)
+
+brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
 day10part1 :: IO ()
-day10part1 = do case parse theParser "" example of
-                  Left pe -> error $ show pe
-                  Right c -> print c
+day10part1 = do
+    x <- parseFromFile parseInput "input10.txt"
+    case x of
+      Left pe -> error $  "invalid input " <> show pe
+    --   Right ss -> print $ map (`run` []) ss
+      Right ss -> mainer ss
 
 day10part2 :: IO ()
 day10part2 = pure ()
 
-data Character = Parenth | Square | Curly | Angle deriving (Eq)
+parseInput :: Monad m => ParsecT String u m [[Char]]
+parseInput = bracketParser `sepBy` newline
 
-type Stack = [Character]
+bracketParser :: Monad m => ParsecT String u m [Char]
+bracketParser = some $ choice $ map char brackets
 
-push :: Stack -> Character -> Stack
-push [] character = [character]
-push ss character = ss ++ [character]
+mainer :: [String] -> IO ()
+mainer ss = print $ sum $ map leftToPoint $ main ss
 
-pop :: Stack -> Character -> Either Character Stack
-pop [] character = Left character
-pop ss character | head ss /= character = Left character
-pop ss character | head ss == character = Right $ tail ss
+main :: [String] -> [Either Char [Char]]
+main = map (`run` [])
 
--- parse :: String -> Either String (Character, String)
--- parse s:ss | s == "(" = (Parenth, ss)
+run :: String -> [Char] -> Either Char [Char]
+(s:ss) `run` stack = run ss =<< takeFromStringAndPutOnStack (s:ss) stack
+[] `run` stack = Right stack
 
-parseParensInput :: (Monad m) => ParsecT String u m Char -> ParsecT String u m Char
-parseParensInput p = char '(' <|> p <|> char ')' <|> p
-
-parseSquareInput :: (Monad m) => ParsecT String u m Char -> ParsecT String u m Char
-parseSquareInput p = char '[' <|> p <|> char ']' <|> p
-
-parseAngleInput :: (Monad m) => ParsecT String u m Char -> ParsecT String u m Char
-parseAngleInput p = char '<' <|> p <|> char '>' <|> p
-
-parseCurlyInput :: (Monad m) => ParsecT String u m Char -> ParsecT String u m Char
-parseCurlyInput p = char '{' <|> p <|> char '}'  <|> p
-
-recurseParse :: (Monad m) => ParsecT String u m Char
-recurseParse = parseAngleInput recurseParse <|> parseParensInput recurseParse <|> parseSquareInput recurseParse <|> parseCurlyInput recurseParse
-
-theParser :: (Monad m) => ParsecT String u m Char
-theParser = recurseParse  <* eof 
+takeFromStringAndPutOnStack :: String -> [Char] -> Either Char [Char]
+takeFromStringAndPutOnStack (s:ss) [] = if s == '(' || s == '{' || s == '<' || s == '[' then Right [s] else Left s
+takeFromStringAndPutOnStack (s:ss) (st:sts) = case compareInputToStack s st of
+  Left c -> Left c
+  Right c -> Right (if c == ')' || c == '}' || c == ']' || c == '>' then sts else s:st:sts )
+takeFromStringAndPutOnStack [] a = Right a
 
 
-example = "()()"
--- parsensOpen :: Monad m => ParsecT [Char] u m Character
--- parsensOpen = Parenth <$ char '('
+-- Top of String Input -> Top of Stack 
+compareInputToStack :: Char -> Char -> Either Char Char
+compareInputToStack '(' _ = Right '('
+compareInputToStack '[' _ = Right '['
+compareInputToStack '{' _ = Right '{'
+compareInputToStack '<' _ = Right '<'
+compareInputToStack ')' '(' = Right '('
+compareInputToStack ']' '[' = Right '['
+compareInputToStack '}' '{' = Right '{'
+compareInputToStack '>' '<' = Right '<'
+compareInputToStack a _ = Left a
 
--- squareOpen :: Monad m => ParsecT [Char] u m Character
--- squareOpen = Parenth <$ char '['
+
+push :: [a] -> a -> [a]
+push xs x = x:xs
+
+pop :: [a] -> ([a], Maybe a)
+pop (x:xs) = (xs, Just x)
+pop [] = ([], Nothing )
+
+isValid :: Char -> Char -> Bool
+isValid '(' ')' = True
+isValid '[' ']' = True
+isValid '<' '>' = True
+isValid '{' '}' = True
+isValid _ _ = False
+
+toPoints :: Char -> Int
+toPoints ')' = 3
+toPoints ']' = 57
+toPoints '}' = 1197
+toPoints '>' = 25137
+toPoints _ = 0
+
+leftToPoint :: Either Char a -> Int
+leftToPoint (Left a) = toPoints a
+leftToPoint _ = 0
+
+example = "[({(<(())[]>[[{[]{<()<>>\n\
+\[(()[<>])]({[<{<<[]>>(\n\
+\{([(<{}[<>[]}>{[]{[(<()>\n\
+\(((({<>}<{<{<>}{[]{[]{}\n\
+\[[<[([]))<([[{}[[()]]]\n\
+\[{[{({}]{}}([{[{{{}}([]\n\
+\{<[[]]>}<{[{[{[]{()[[[]\n\
+\[<(<(<(<{}))><([]([]()\n\
+\<{([([[(<>()){}]>(<<{{\n\
+\<{([{{}}[<[[[<>{}]]]>[]]"
