@@ -6,6 +6,7 @@ import Control.Applicative (Alternative(some))
 import Data.List
 import Text.Parsec.String (parseFromFile)
 import Control.Monad
+import Data.Either
 
 brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
@@ -17,7 +18,11 @@ day10part1 = do
       Right ss -> mainPart1 ss
 
 day10part2 :: IO ()
-day10part2 = pure ()
+day10part2 = do
+    x <- parseFromFile parseInput "input10.txt"
+    case x of
+        Left pe -> error $  "invalid input " <> show pe
+        Right ss -> mainPart2 ss
 
 parseInput :: Monad m => ParsecT String u m [[Char]]
 parseInput = bracketParser `sepBy` newline
@@ -26,10 +31,10 @@ bracketParser :: Monad m => ParsecT String u m [Char]
 bracketParser = some $ choice $ map char brackets
 
 mainPart1 :: [String] -> IO ()
-mainPart1 ss = print $ sum $ map (leftToPoint . (`run` [])) ss
+mainPart1 ss = print $ sum $ map toPoints $ lefts $ map (`run` []) ss
 
 mainPart2 :: [String] -> IO ()
-mainPart2 ss = print $ map (`run` []) ss
+mainPart2 = print . median . sort . map (foldr ((\a b -> b*5 + a) . toPoints) 0) . rights . map (`run` [])
 
 run :: String -> [Char] -> Either Char [Char]
 (s:ss) `run` stack = run ss =<< takeFromStringAndPutOnStack (s:ss) stack
@@ -40,6 +45,10 @@ takeFromStringAndPutOnStack (s:ss) [] = if s == '(' || s == '{' || s == '<' || s
 takeFromStringAndPutOnStack (s:ss) (st:sts) = if compareInputToStack s st then Right (if s == ')' || s == '}' || s == ']' || s == '>' then sts else s:st:sts ) else Left s
 takeFromStringAndPutOnStack [] a = Right a
 
+
+median :: [a] -> a
+median a = a !! midpoint
+    where midpoint = quot (length a) 2
 
 -- Top of String Input -> Top of Stack 
 compareInputToStack :: Char -> Char -> Bool
@@ -73,11 +82,11 @@ toPoints ')' = 3
 toPoints ']' = 57
 toPoints '}' = 1197
 toPoints '>' = 25137
+toPoints '(' = 1
+toPoints '[' = 2
+toPoints '{' = 3
+toPoints '<' = 4
 toPoints _ = 0
-
-leftToPoint :: Either Char a -> Int
-leftToPoint (Left a) = toPoints a
-leftToPoint _ = 0
 
 -- example = "<{([([[(<>()){}]>(<<{{"
 example = "[({(<(())[]>[[{[]{<()<>>\n\
