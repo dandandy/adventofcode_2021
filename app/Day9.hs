@@ -66,12 +66,16 @@ safeGetWithIndex a b m = case M.safeGet a b m of
   Just a' -> Just (a, b, a')
 
 findBasin :: (Ord a, Num a, Show a) => Int -> Int -> M.Matrix a -> [(Int, Int)]
-findBasin a b m = (((a,b) :) . concatMap (\(x,y,z) -> findBasin x y m) . filter (\(x,y,z) -> z == elem + 1 && z /= 9)) ns
+findBasin a b m = (
+                ((a,b) :) . 
+                concatMap (\(x,y,z) -> findBasin x y m) . 
+                filter (\(x,y,z) -> z >= elem + 1 && z /= 9)
+        ) ns
     where   ns = getListNeighbours a b m
             elem = M.getElem  a b m
 
 getListNeighbours :: (Ord a, Num a, Show a) => Int -> Int -> M.Matrix a -> [(Int, Int, a)]
-getListNeighbours a b m = Data.Maybe.fromMaybe [] $ sequence $ filter Data.Maybe.isJust $ neighboursIndex a b m
+getListNeighbours a b m = Data.Maybe.catMaybes $ neighboursIndex a b m
 
 example :: [Char]
 example = "2199943210\n\
