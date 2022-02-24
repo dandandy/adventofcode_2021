@@ -32,7 +32,7 @@ main = sequence_ [
     -- day8p2
     -- day9part1,
     -- day9part2
-    -- day10part1
+    day10part1,
     day10part2
 
     ]

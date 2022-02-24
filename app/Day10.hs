@@ -8,9 +8,28 @@ import Text.Parsec.String (parseFromFile)
 import Control.Monad
 import Data.Either
 
+import Control.Monad.State
+import Control.Monad.Trans.Except
+
 brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
-data Bracket = Curly | Parent | Square | Angle deriving (Show)
+data Bracket = Curly | Parent | Square | Angle deriving (Show, Eq)
+
+nextState :: BracketState1 -> (BracketOutput, BracketState1)
+nextState (Left a) = ([], Left a)
+nextState  (Right ([], bb)) = (bb, Right ([], bb) )
+nextState (Right ((s:ss), [])) | isOpen s = ([charToBracket s], Right (ss, [charToBracket s]))
+nextState (Right ((s:ss), [])) | isClose s = ([], Left s)
+nextState (Right ((s:ss), (b:bb))) | isOpen s = (newBbs, Right (ss, newBbs))
+    where newBbs = charToBracket s : (b:bb)
+nextState (Right ((s:ss), (b:bb))) | isClose s && charToBracket s == b = (bb, Right (ss, bb))
+nextState (Right ((s:ss), (b:bb))) | isClose s && charToBracket s /= b = (b:bb, Left s)
+
+type BracketOutput = [Bracket]
+type BracketState1 = Either Char (String, BracketOutput) 
+
+checkLetterS :: State BracketState1 BracketOutput
+checkLetterS = state nextState
 
 day10part1 :: IO ()
 day10part1 = do
@@ -21,11 +40,11 @@ day10part1 = do
 
 day10part2 :: IO ()
 day10part2 = do
-    x <- parseFromFile parseInput "input10.txt"
-    -- x <- pure $ parse parseInput "example2" example2
+    -- x <- parseFromFile parseInput "input10.txt"
+    x <- pure $ parse parseInput "example2" example2
     case x of
         Left pe -> error $  "invalid input " <> show pe
-        Right ss -> print $ medianScore $ map autocompleteScore $ findValidIncompleteLines ss
+        Right ss -> print $ execState (replicateM (length (head ss) + 1) checkLetterS) (Right (head ss, []))
 
 parseInput :: Monad m => ParsecT String u m [[Char]]
 parseInput = bracketParser `sepBy` newline
@@ -39,13 +58,13 @@ mainPart1 = print . sum . map (toPoints . charToBracket) . lefts . map (`run` []
 mainPart2 :: [String] -> IO ()
 mainPart2 = print . medianScore . map autocompleteScore . findValidIncompleteLines
 
-medianScore :: [Int] -> Int 
-medianScore  = median . sort 
+medianScore :: [Int] -> Int
+medianScore  = median . sort
 
 findValidIncompleteLines :: [String] -> [[Bracket]]
 findValidIncompleteLines = rights . map (`run` [])
 
-autocompleteScore :: [Bracket] -> Int 
+autocompleteScore :: [Bracket] -> Int
 autocompleteScore = foldr ((\a b -> b*5 + a) . toPointsPart2) 0 . reverse
 
 run :: String -> [Char] -> Either Char [Bracket]
@@ -73,6 +92,15 @@ compareInputToStack '}' '{' = True
 compareInputToStack '>' '<' = True
 compareInputToStack a _ = False
 
+isOpen :: Char -> Bool
+isOpen '(' = True
+isOpen '[' = True
+isOpen '<' = True
+isOpen '{' = True
+isOpen _ = False
+
+isClose :: Char -> Bool
+isClose = not . isOpen
 
 push :: [a] -> a -> [a]
 push xs x = x:xs
