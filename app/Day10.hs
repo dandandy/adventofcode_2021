@@ -34,7 +34,7 @@ bracketParser :: Monad m => ParsecT String u m [Char]
 bracketParser = some $ choice $ map char brackets
 
 mainPart1 :: [String] -> IO ()
-mainPart1 ss = print $ sum $ map toPoints $ map charToBracket $ lefts $ map (`run` []) ss
+mainPart1 = print . sum . map (toPoints . charToBracket) . lefts . map (`run` [])
 
 mainPart2 :: [String] -> IO ()
 mainPart2 = print . medianScore . map autocompleteScore . findValidIncompleteLines

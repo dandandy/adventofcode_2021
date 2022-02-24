@@ -1,5 +1,5 @@
 
-module Day9 (day9part1, day9part2) where
+module Day9 (day9part1, day9part2, neighbours, neighboursIndex) where
 
 import qualified Data.Matrix as M
 import Text.Parsec
