@@ -10,6 +10,7 @@ import Data.Either
 
 import Control.Monad.State
 import Control.Monad.Trans.Except
+import qualified Control.Monad.Identity as Data.Functor.Identity
 
 brackets = ['{', '}', '(', ')', '[',']', '<', '>']
 
@@ -47,11 +48,13 @@ day10part2 = do
         Right ss -> mainPart2 ss
 
 
-main :: String -> Either Char (String, BracketOutput)
-main ss = foldM foldFunc (initalState ss)  (replicate (length ss ) checkLetterS)
+-- main :: String -> Either Char (String, BracketOutput)
+-- main :: Foldable t => t a -> BracketState1 -> BracketState1
+main :: String -> BracketState1
+main ss = execState (replicateM (length ss ) checkLetterS) (initalState ss)
 
-initalState :: a1 -> (a1, [a2])
-initalState ss =  (ss, [])
+initalState :: String -> BracketState1
+initalState ss =  Right (ss, [])
 
 foldFunc :: (String, BracketOutput) -> State BracketState1 BracketOutput -> BracketState1
 foldFunc b a = execState a (Right b)
