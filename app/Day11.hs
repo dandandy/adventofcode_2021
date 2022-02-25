@@ -1,4 +1,4 @@
-module Day11 (day11part1) where
+module Day11 (day11part1, day11part2) where
 import Text.Parsec
 import qualified Data.Matrix as M
 import Day9 (neighboursIndex, safeGetWithIndex)
@@ -29,12 +29,32 @@ day11part1 = do
     let x' = runState main <$> x
     print x'
 
+day11part2 :: IO ()
+day11part2 = do
+    -- x <- parseFromFile day11part1Parser "input10.txt"
+    let x = parse day11part1Parser "input10.txt" input11
+    print x
+    let x' = runState main2 <$> x
+    print x'
+
 type OctoState a = StateT (M.Matrix Int) Monad.Identity a
 
 -- main :: OctoState
 
 main :: StateT (M.Matrix.Matrix Int) Monad.Identity Int
 main = sum  <$> Monad.replicateM 100 startStep
+
+main2 :: StateT (M.Matrix.Matrix Int) Monad.Identity Int
+main2 = length  <$> recurse isCompletePart2 startStep
+
+recurse :: OctoState Bool -> OctoState a -> OctoState [a]
+recurse b action = 
+    do  p <- b
+        a <- action
+        if p then return [] else 
+            do  
+                a' <- recurse b action
+                return $ a:a'
 
 
 startStep = do
@@ -53,6 +73,11 @@ calculateStep = do  b <- isComplete
 isComplete :: OctoState Bool
 isComplete = do null . getFlashesIndex <$> get
 
+isCompletePart2 :: OctoState Bool
+isCompletePart2 = do get >>= (return . (==) zeroMatrix)
+
+zeroMatrix :: M.Matrix Int
+zeroMatrix = M.fromList 10 10 $ replicate 100 0
 stepM' :: OctoState Int
 stepM' = do m <- get
             let flashIndexes = getFlashesIndex m

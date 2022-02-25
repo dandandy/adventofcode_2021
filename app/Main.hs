@@ -34,6 +34,7 @@ main = sequence_ [
     -- day9part2
     -- day10part1,
     -- day10part2
-    day11part1 
+    -- day11part1,
+    day11part2
 
     ]
