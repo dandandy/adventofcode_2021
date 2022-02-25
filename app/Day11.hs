@@ -24,19 +24,17 @@ manyDigit = many1 (read . pure <$> digit)
 day11part1 :: IO ()
 day11part1 = do
     -- x <- parseFromFile day11part1Parser "input10.txt"
-    let x = parse day11part1Parser "input10.txt" example2
+    let x = parse day11part1Parser "input10.txt" input11
     print x
-    let x' = snd <$> runState (sequence ([incrementAllM >> return Nothing]<> concat (replicate 6 [isComplete >>= return . Just, stepM' >> return Nothing]))) <$> x
-    
-    let y = parse day11part1Parser "input10.txt" example3
-    print $ (==) <$> x' <*> y
+    let x' = runState main <$> x
+    print x'
 
 type OctoState a = StateT (M.Matrix Int) Monad.Identity a
 
 -- main :: OctoState
 
-main :: StateT (M.Matrix.Matrix Int) Monad.Identity [Int]
-main = Monad.replicateM 1 startStep
+main :: StateT (M.Matrix.Matrix Int) Monad.Identity Int
+main = sum  <$> Monad.replicateM 100 startStep
 
 
 startStep = do
@@ -48,18 +46,9 @@ calculateStep :: OctoState Int
 calculateStep = do  b <- isComplete
                     if b
                         then return 0
-                        else calculateStep
-
-stepM :: OctoState Int
-stepM = state step
-
-step :: M.Matrix Int -> (Int, M.Matrix Int)
-step m = (length flashIndexes, setFlashedIndexToZero)
-    where
-          flashIndexes = getFlashesIndex m
-          flashNeighbours = filter (`isZeroValue` m) $  concatMap (`getNeighbours` m) flashIndexes
-          afterFlashes = foldl (flip incrementAt) m flashNeighbours
-          setFlashedIndexToZero = foldl (flip setToZero) afterFlashes flashIndexes
+                        else do p <-stepM'
+                                ps <- calculateStep
+                                return $ p + ps
 
 isComplete :: OctoState Bool
 isComplete = do null . getFlashesIndex <$> get
@@ -153,3 +142,14 @@ example3 = "8807476555\n\
 \0000007456\n\
 \9000000876\n\
 \8700006848"
+
+input11 = "8271653836\n\
+\7567626775\n\
+\2315713316\n\
+\6542655315\n\
+\2453637333\n\
+\1247264328\n\
+\2325146614\n\
+\2115843171\n\
+\6182376282\n\
+\2384738675"
