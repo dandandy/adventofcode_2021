@@ -7,6 +7,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Matrix as M.Matrix
 import Control.Monad.State (StateT, state, MonadState (get, put), runState)
 import qualified Control.Monad.Identity as Monad
+import qualified Data.Functor.Classes as M
 
 type Point = (Int, Int)
 
@@ -25,7 +26,10 @@ day11part1 = do
     -- x <- parseFromFile day11part1Parser "input10.txt"
     let x = parse day11part1Parser "input10.txt" example2
     print x
-    print $ runState (sequence [incrementAllM >> return False, Monad.void stepM' >> return False, isComplete, stepM' >> return False]) <$> x
+    let x' = snd <$> runState (sequence ([incrementAllM >> return Nothing]<> concat (replicate 6 [isComplete >>= return . Just, stepM' >> return Nothing]))) <$> x
+    
+    let y = parse day11part1Parser "input10.txt" example3
+    print $ (==) <$> x' <*> y
 
 type OctoState a = StateT (M.Matrix Int) Monad.Identity a
 
@@ -64,7 +68,7 @@ stepM' :: OctoState Int
 stepM' = do m <- get
             let flashIndexes = getFlashesIndex m
             let flashNeighbours =  concatMap (`getNeighbours` m) flashIndexes
-            mapM_ incrementAtM flashNeighbours
+            mapM_ incrementAtIfNotZero flashNeighbours
             mapM_ setToZeroM flashIndexes
             return $ length flashIndexes
 
@@ -113,6 +117,9 @@ getFlashesIndex :: M.Matrix Int -> [Point]
 getFlashesIndex m = [(x, y) |  x <- [1..10], y <- [1..10], flashes (M.getElem x y m) ]
 
 
+isEqual :: (Eq a) => M.Matrix a -> M.Matrix a -> Bool
+isEqual = (==)
+
 example1 = "5483143223\n\
 \2745854711\n\
 \5264556173\n\
@@ -135,3 +142,14 @@ example2 = "6594254334\n\
 \7993992245\n\
 \5957959665\n\
 \6394862637"
+
+example3 = "8807476555\n\
+\5089087054\n\
+\8597889608\n\
+\8485769600\n\
+\8700908800\n\
+\6600088989\n\
+\6800005943\n\
+\0000007456\n\
+\9000000876\n\
+\8700006848"
