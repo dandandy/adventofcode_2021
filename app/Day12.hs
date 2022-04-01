@@ -26,25 +26,32 @@ import Control.Monad.State (State, MonadState (get))
 import Control.Monad (guard)
 import Data.Char (isLower, isUpper)
 
-
 -- data Visited = Map Vertex Bool
 
 day12part1 :: IO ()
 -- day12part1 =  runParserT parseInput Monad.Identity "" example >>= print
-day12part1 = do x <- runParserT parseInput () "input12" input12
+day12part1 = do x <- runParserT parseInput () "example" input12
                 print x
                 print $ toEdges <$> x
-                print $  flip next "start" <$> toEdges <$> x
-                print $  length <$> flip next "start" <$> toEdges <$> x
+                -- print $ nub <$> next Nothing "start" <$> toEdges <$> x
+                print $  length <$> nub <$> next Nothing "start" <$> toEdges <$> x
 
 -- next :: [(String, String)] -> String -> [[String]]
-next :: [(String, String)] -> String -> [[String]]
-next edges "end"  = [["end"]]
-next [] _ = []
-next edges s = map ([s] ++) $ concatMap (next (moveEdges s edges)) $ nextEdges s edges
+next :: Maybe (String, Int) -> String -> [(String, String)] -> [[String]]
+next _ "end"  edges                                          = [["end"]]
+next _ [] _                                                 = []
+next (Just (s', i)) s edges | isSmallCave s && s' == s && i > 0  = map ([s] ++) $ concatMap (\nextE -> next (Just (s', i + 1)) nextE (moveEdges s edges)) $ nextEdges s edges
+next (Just (s', i)) s edges | isSmallCave s && s' == s   = map ([s] ++) $ concatMap (\nextE -> next (Just (s', i + 1)) nextE edges) $ nextEdges s edges
+next Nothing s edges        | isSmallCave s             = map ([s] ++) $ concatMap (\nextE -> next (Just (s, 1)) nextE edges ++ next Nothing nextE (moveEdges s edges)) $ nextEdges s edges
+next js s edges                                             = map ([s] ++) $ concatMap (\nextE -> next js nextE (moveEdges s edges)) $ nextEdges s edges
+
+isSmallCave :: String -> Bool
+isSmallCave "start" = False 
+isSmallCave "end" = False 
+isSmallCave s = isLower $ head s 
 
 moveEdges :: String -> [(String, String)] -> [(String, String)]
-moveEdges s edges = if isUpper (head s) then edges else filter (\(a,b) -> a /= s && b /= s) edges
+moveEdges s edges = if not $ isSmallCave s then edges else filter (\(a,b) -> a /= s && b /= s) edges
 
 nextEdges :: String -> [(String, String)] -> [String]
 -- nextEdges "end" _ = []
