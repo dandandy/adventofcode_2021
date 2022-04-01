@@ -13,6 +13,8 @@ import Day10
 import Day11
 import Day12
 
+import Day13
+
 main :: IO ()
 main = sequence_ [
     -- day1part1, 
@@ -37,6 +39,8 @@ main = sequence_ [
     -- day10part2
     -- day11part1,
     -- day11part2
-    day12part1,
-    day12part2
+    -- day12part1,
+    -- day12part2,
+    day13part1,
+    day13part2
     ]
