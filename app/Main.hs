@@ -13,7 +13,12 @@ import Day10
 import Day11
 import Day12
 
+import MaybeTExample
+
 import Day13
+import Control.Monad.Trans.Maybe (MaybeT (runMaybeT, MaybeT))
+import Text.Read (readMaybe)
+import Control.Monad.Cont (MonadTrans(lift), MonadIO (liftIO))
 
 main :: IO ()
 main = sequence_ [
@@ -41,6 +46,7 @@ main = sequence_ [
     -- day11part2
     -- day12part1,
     -- day12part2,
-    day13part1,
-    day13part2
+    -- day13part1,
+    -- day13part2
+    MaybeTExample.example 
     ]
