@@ -73,64 +73,8 @@ parseLine = do
     word2 <- many1 letter
     return (word1, word2)
 
-toEdge :: (String, [String]) -> (String, String, [String])
-toEdge (s, a) = (s, s, a)
-
-graphFromEdgesState :: [(String, String)] -> [(String, [String])]
-graphFromEdgesState as = toList $ execState (mapM toEdgeMapState as) empty
-
-toEdgeMapState :: (String, String) -> State (Map String [String]) ()
-toEdgeMapState sa = state (toEdgeMap sa)
-
-toEdgeMap :: (String, String) -> Map String [String] -> ((), Map String [String])
-toEdgeMap (s, a) m = ((), insertWith (<>) s [a] m)
-
-prependString :: String -> [String] -> Maybe [String]
-prependString a = Just . (a:)
-
-appendRev :: [(a,a)] -> [(a,a)]
-appendRev a =  a ++ map rev a
-
-fst3 :: (a, b, c) -> a
-fst3 (a,b,_) = a
-snd3 :: (a, b, c) -> b
-snd3 (_,b,_) = b
-trd3 :: (a, b, c) -> b
-trd3 (_,b,_) = b
-
-rev :: (b, a) -> (a, b)
-rev (a,b) = (b,a)
-
-path :: Graph -> VertexInfoMap -> Vertex -> Vertex -> ([Vertex], VertexInfoMap)
-path _ m s e | s == e                       = ([], m)
-path g m s e | s /= e && elem e (g ! s)     = ([e], m)
-path g m s e | s /= e && notElem e (g ! s)  = ([], m)
-path a m b c = error $ "something went wrong: " <> show a <> " " <> show b <> " " <> show c
-
-move :: Vertex -> VertexInfoMap -> (Vertex, VertexInfoMap)
-move v m = undefined -- update VertexInfoMap state
-
-canMoveTo :: Vertex -> VertexInfoMap -> (Bool, VertexInfoMap)
-canMoveTo v m = case Data.Map.lookup v m of
-  Nothing -> error $ "invalid state: " <> show v <> ""<> show m
-  Just vi -> (canMoveTo' vi, m)
-
-canMoveTo' :: VertexInfo -> Bool
-canMoveTo' (Lowercase b) = b
-canMoveTo' Uppercase = True
-
-toVertexInfoMap :: Graph -> (String -> Maybe Vertex) -> [String] -> Maybe VertexInfoMap
-toVertexInfoMap g l ss = toVertexInfoMap' l (toNodeAndVertexInfo g ss)
-
-toNodeAndVertexInfo :: Graph -> [String] -> [(String, VertexInfo)]
-toNodeAndVertexInfo g nodes = zip nodes $ map (\node -> if isUpper (head node) then Uppercase else Lowercase False) nodes
-
-toVertexInfoMap' :: (String -> Maybe Vertex) -> [(String, VertexInfo)] ->Maybe  VertexInfoMap
-toVertexInfoMap' l vs =fromList <$> mapM (toVertexInfoMapField l) vs
-
-toVertexInfoMapField :: (String -> Maybe Vertex) -> (String, VertexInfo) -> Maybe (Vertex, VertexInfo)
-toVertexInfoMapField l (s, vf) | isNothing (l s) = Nothing
-toVertexInfoMapField l (s, vf) = (\a -> (a, vf)) <$> l s
+toEdge :: (String, String) -> (String, String, [String])
+toEdge (s, a) = (s, s, [a])
 
 reverseT :: (a, b) -> (b, a)
 reverseT (a,b) = (b,a)
