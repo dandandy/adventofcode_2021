@@ -7,17 +7,19 @@ import Text.Parsec.Combinator (sepBy)
 import qualified Control.Monad.Identity as Monad
 import Data.Graph (graphFromEdges, Graph, Vertex)
 import Data.Map (Map, empty, toList, insertWith, fromList)
+import qualified Data.Map (lookup)
 import Control.Monad.State (MonadState(state), State, runState, sequence, execState, liftM)
 import GHC.Arr (bounds, (!))
 import Data.Char
 import Data.Maybe
+import qualified GHC.Base as Monad
 
-data VertexInfo = Lowercase Bool | Uppercase deriving (Show)
+data VertexInfo = Lowercase Bool | Uppercase deriving (Show, Eq, Ord)
 type VertexInfoMap = Map Vertex VertexInfo
 
 day12part1 :: IO ()
 -- day12part1 = runParserT parseInput Monad.Identity "" example >>= print . ( fst3 <$>  graphFromEdges <$> map toEdge <$> graphFromEdgesState <$>)
-day12part1 = do Right x <- runParserT parseInput Monad.Identity "" example
+day12part1 = do Right x <- runParserT parseInput Monad.IO "" example
                 let edges = (graphFromEdgesState . appendRev) x
                 print edges
                 let (a,b,c) = (graphFromEdges .  map toEdge) edges
@@ -75,6 +77,17 @@ path g m s e | s /= e && elem e (g ! s)     = ([e], m)
 path g m s e | s /= e && notElem e (g ! s)  = ([], m)
 path a m b c = error $ "something went wrong: " <> show a <> " " <> show b <> " " <> show c
 
+move :: Vertex -> VertexInfoMap -> (Vertex, VertexInfoMap)
+move v m = undefined -- update VertexInfoMap state
+
+canMoveTo :: Vertex -> VertexInfoMap -> (Bool, VertexInfoMap)
+canMoveTo v m = case Data.Map.lookup v m of
+  Nothing -> error $ "invalid state: " <> show v <> ""<> show m
+  Just vi -> (canMoveTo' vi, m)
+
+canMoveTo' :: VertexInfo -> Bool
+canMoveTo' (Lowercase b) = b
+canMoveTo' Uppercase = True
 
 toVertexInfoMap :: Graph -> (String -> Maybe Vertex) -> [String] -> Maybe VertexInfoMap
 toVertexInfoMap g l ss = toVertexInfoMap' l (toNodeAndVertexInfo g ss)
