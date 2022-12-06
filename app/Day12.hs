@@ -1,5 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
-module Day12  (day12part1, day12part2) where
+module Day12 where
 import qualified Control.Monad as Monad
 import Text.Parsec
     ( Parsec,
@@ -20,67 +20,75 @@ import Data.Graph (graphFromEdges, Graph, Vertex, reachable)
 import Text.Parsec.Error (ParseError)
 import GHC.IO
 import Control.Monad.Trans.Except (ExceptT)
-import Data.List (nub)
+import Data.List
 import qualified Data.Map as Map
 import Control.Monad.State (State, MonadState (get))
 import Control.Monad (guard)
 import Data.Char (isLower, isUpper)
-
+import qualified Data.Map
 -- data Visited = Map Vertex Bool
+
+data Node = Node String deriving (Eq, Show, Ord)
 
 day12part1 :: IO ()
 -- day12part1 =  runParserT parseInput Monad.Identity "" example >>= print
 day12part1 = do x <- runParserT parseInput () "example" input12
-                print x
-                print $ toEdges <$> x
-                -- print $ nub <$> next Nothing "start" <$> toEdges <$> x
-                print $  length <$> nub <$> next Nothing "start" <$> toEdges <$> x
+                putStrLn $ show $ toAdjacency <$> x
+                let result = (\z -> next (Node "start") [] (toAdjacency z))  <$> x
+                -- putStrLn $ show $ sort <$> map (reverse) <$> result
+                putStrLn $ show $ length <$> filter ((== (Node "end")) . head) <$> result
 
--- next :: [(String, String)] -> String -> [[String]]
-next :: Maybe (String, Int) -> String -> [(String, String)] -> [[String]]
-next _ "end"  edges                                          = [["end"]]
-next _ [] _                                                 = []
-next (Just (s', i)) s edges | isSmallCave s && s' == s && i > 0  = map ([s] ++) $ concatMap (\nextE -> next (Just (s', i + 1)) nextE (moveEdges s edges)) $ nextEdges s edges
-next (Just (s', i)) s edges | isSmallCave s && s' == s   = map ([s] ++) $ concatMap (\nextE -> next (Just (s', i + 1)) nextE edges) $ nextEdges s edges
-next Nothing s edges        | isSmallCave s             = map ([s] ++) $ concatMap (\nextE -> next (Just (s, 1)) nextE edges ++ next Nothing nextE (moveEdges s edges)) $ nextEdges s edges
-next js s edges                                             = map ([s] ++) $ concatMap (\nextE -> next js nextE (moveEdges s edges)) $ nextEdges s edges
+next :: Node -> [Node] -> [(Node, [Node]) ] -> [[Node]]
+next (Node "end") path edges = [Node "end":path]
+next node path edges = concatMap (\a -> next a (node:path) edges) (filter (canGoPart2 (node:path)) (Day12.lookup edges node))
 
-isSmallCave :: String -> Bool
-isSmallCave "start" = False 
-isSmallCave "end" = False 
-isSmallCave s = isLower $ head s 
+canGoPart1 :: [Node] -> Node -> Bool
+canGoPart1 path (Node next) | next == "start" = False
+                            | isLower (head next) && elem (Node next) path = False
+                            | otherwise = True
 
-moveEdges :: String -> [(String, String)] -> [(String, String)]
-moveEdges s edges = if not $ isSmallCave s then edges else filter (\(a,b) -> a /= s && b /= s) edges
+canGoPart2 :: [Node] -> Node -> Bool
+canGoPart2 path (Node next) | next == "start" = False
+                            | isUpper (head next) = True
+                            | next == "end" = True
+                            | isLower (head next) && notElem (Node next) path = True
+                            | isLower (head next) && not (containsAnyLowerCaseTwice (map (\(Node a) -> a) path)) = True
+                            | isLower (head next) && containsAnyLowerCaseTwice (map (\(Node a) -> a) path) = False
+                            | otherwise = error (show $ "unexpected condition next " ++ show next ++ " path " ++ show path)
 
-nextEdges :: String -> [(String, String)] -> [String]
--- nextEdges "end" _ = []
-nextEdges s a  = map snd $ filter (\(a,b) -> a == s) a
+containsTwice :: String -> [String] -> Bool
+containsTwice str = (>=2) . length . filter (==str)
 
-toEdges :: [(String, String)] -> [(String, String)]
-toEdges as = filter (\(a,b) -> b /= "start" && a /= "end") $ as ++ map reverseT as
+containsAnyLowerCaseTwice :: [String] -> Bool
+containsAnyLowerCaseTwice = any ((>=2) . length) . group .  sort . filter (isLower . head)
 
-day12part2 :: Monad.Monad m => m ()
-day12part2 = return ()
+lookup :: [(Node, [Node])] -> Node -> [Node]
+lookup adj node = snd $ head $ filter ((node==) . fst) adj
 
-parseInput :: Monad m =>  ParsecT String u m [(String, String)]
-parseInput = parseLine `sepEndBy` newline
+toAdjacency :: [(Node, Node)] -> [(Node, [Node]) ]
+toAdjacency aaa = map (\a -> (a,sort $ lookupEdge a edges)) nodes
+    where
+        edges = toEdges aaa
+        nodes = nub $ map fst edges
 
-parseLine :: Monad m => ParsecT String u m (String, String)
+lookupEdge :: Node -> [(Node, Node)] -> [Node]
+lookupEdge key = map snd . filter ((==key) . fst)
+
+toEdges :: (Eq a) => [(a,a)] -> [(a,a)]
+toEdges lines = lines ++ map reverseT lines
+
+parseInput :: Monad m =>  ParsecT String u m [(Node, Node)]
+parseInput =  parseLine `sepEndBy` newline
+
+parseLine :: Monad m => ParsecT String u m (Node, Node)
 parseLine = do
     word1 <- many1 letter
     char '-'
     word2 <- many1 letter
-    return (word1, word2)
-
-toEdge :: (String, String) -> (String, String, [String])
-toEdge (s, a) = (s, s, [a])
+    return (Node word1, Node word2)
 
 reverseT :: (a, b) -> (b, a)
 reverseT (a,b) = (b,a)
-
-matching :: Eq a => a -> [(a,b)] -> [b]
-matching a = map snd . filter (\(x,y) -> x == a)
 
 example = "start-A\n\
 \start-b\n\
